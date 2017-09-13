@@ -7,4 +7,4 @@ fi
 
 
 g++ -std=c++11 -O3 -Wall -I/usr/local/include -c $1.cpp
-g++ -std=c++11 -O3 -L/usr/local/lib $1.o -lgsl -lgslcblas -lm
+g++ -std=c++11 -O3 -L/usr/local/lib $1.o -lgsl -lgslcblas -lm -lboost_container -lboost_system -lboost_filesystem

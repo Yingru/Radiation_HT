@@ -1,0 +1,44 @@
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+c
+c     common block for heavy quark radiation energy loss
+c     
+c     Author   : Shanshan Cao
+c     Date     : 03/21/2012
+c    
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+
+      double precision  PI,C_F,N_c,alpha,hbarc,fixAlphas
+      parameter (PI = 3.1415926535d0)
+      parameter (N_c=3.d0)
+      parameter (C_F=4.d0/3.d0)
+      parameter (alpha=1.047d0)
+      parameter (hbarc=0.1973d0)
+      parameter (fixAlphas=0.3d0)
+
+      integer HQener_gn,t_gn,temp_gn
+      parameter (HQener_gn=10)
+      parameter (t_gn=1)
+      parameter (temp_gn=20)
+
+      double precision dNg_over_dt(0:temp_gn,0:HQener_gn)
+
+      double precision HQener_max,t_max,t_min,temp_max,temp_min
+      parameter(HQener_max=100d0)
+      parameter(t_min=0.d0)
+      parameter(t_max=2.d0)
+      parameter(temp_max=0.75d0)
+      parameter(temp_min=0.15d0)
+
+      double precision delta_HQener,delta_t,delta_temp
+      double precision max_dNg_over_dxdydt
+
+      common/int_table/dNg_over_dt,delta_HQener,delta_t,delta_temp
+      common/maximumfnc/max_dNg_over_dxdydt
+
+      double precision cMass,bMass
+      parameter(cMass=1.27d0,bMass=4.19d0)
+
+      double precision HQenergy,HQmass,time,time_init,temp
+
+      common/rad1/HQenergy,HQmass,time,time_init,temp

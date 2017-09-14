@@ -15,8 +15,8 @@ class RadiationHT
 private:
     int HQflavor_;
     double HQmass_;
-    int Ntime_, Ntemp_, NE_;
-    double timeH_, tempL_, tempH_, EL_, EH_;
+    size_t Ntime_, Ntemp_, NE_;
+    double timeL_, timeH_, tempL_, tempH_, EL_, EH_;
     double dtime_, dtemp_, dE_;
     
     boost::multi_array<double, 3> RadTab, Max_dNg;
@@ -31,7 +31,10 @@ private:
 public:
     RadiationHT(int flavor, std::string fileName, bool plain, bool refresh);
     double dNg_over_dxdydt(double time, double temp, double HQnergy, double x, double y); // gluon emission distribution
-    double Ngluon(double time, double temp, double HQenergy);//gluon emission prob
+    double calculate(double time, double temp, double HQenergy);//gluon emission prob
+    void tabulate(size_t NEstart, size_t dNE);
+    double interpR(double time, double temp, double HQenergy); // interpolate emission prob
+
 };
 
 struct gsl_NgIntegral_params

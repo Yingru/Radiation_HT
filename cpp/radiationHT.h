@@ -30,8 +30,8 @@ private:
 
 public:
     RadiationHT(int flavor, std::string fileName, bool plain, bool refresh);
-    double dNg_over_dxdydt(double time, double temp, double HQnergy, double x, double y); // gluon emission distribution
-    double calculate(double time, double temp, double HQenergy);//gluon emission prob
+    double dNg_over_dxdydt(double time, double temp, double HQnergy, double x, double y, double& maxdNg); // gluon emission distribution
+    void calculate(double time, double temp, double HQenergy, double& result, double& maxdNg);//gluon emission prob, also the maximum integrand it encountered
     void tabulate(size_t NEstart, size_t dNE);
     double interpR(double time, double temp, double HQenergy); // interpolate emission prob
 
@@ -42,6 +42,7 @@ struct gsl_NgIntegral_params
     double time;
     double temp;
     double HQenergy;
+    double maxdNgdxdydt;
     RadiationHT *ptr;
 };
 

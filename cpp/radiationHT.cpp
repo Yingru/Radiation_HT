@@ -12,7 +12,6 @@
 
 #include "radiationHT.h"
 
-double maxdNgdxdydt = 0; // global variable, which track the maxdNgdxdydt the integrand encountered
 const int width = 15; // output width
 namespace fs = boost::filesystem;
 
@@ -39,10 +38,8 @@ RadiationHT::RadiationHT(int flavor, std::string fileName, bool plain, bool refr
         std::vector<std::thread> threads;
 
         size_t Ncores = std::min(size_t(std::thread::hardware_concurrency()), NE_);
-        //size_t call_per_core = size_t(NE_ * 1./Ncores);
-        //size_t call_last_core = NE_ - call_per_core * (Ncores -1);
-        size_t call_per_core = 0;
-        size_t call_last_core = NE_;
+        size_t call_per_core = size_t(NE_ * 1./Ncores);
+        size_t call_last_core = NE_ - call_per_core * (Ncores -1);
 
         auto code = [this](size_t Nstart_, size_t dN_) { this->tabulate(Nstart_, dN_);};
 
@@ -151,7 +148,7 @@ double RadiationHT::TauF(double x, double y, double HQenergy)
 
 
 
-double RadiationHT::dNg_over_dxdydt(double time, double temp, double HQenergy, double x, double y)
+double RadiationHT::dNg_over_dxdydt(double time, double temp, double HQenergy, double x, double y, double &maxdNg)
 // HT formula (as a function of seperated time, temperature, HQenergy, x, y), 
 {
     double qhat = 4.*ALPHA*pow(temp,3)/CF;
@@ -171,8 +168,8 @@ double RadiationHT::dNg_over_dxdydt(double time, double temp, double HQenergy, d
             * pow(sin((time)/2./tauf/HBARC),2)
             * pow(HQenergy*HQenergy/(y*y*HQenergy*HQenergy + HQmass_*HQmass_), 4)
             / (k0_gluon * k0_gluon * HBARC);
-    if (result > maxdNgdxdydt)
-        maxdNgdxdydt = result;
+    if (result > maxdNg)
+        maxdNg = result;
     //std::cout << x << " " << y << "  " << result <<"  " << maxdNgdxdydt << std::endl;
     return result;
 }
@@ -182,21 +179,15 @@ double wrapper_dNgdxdydt(double*args, size_t dim, void *params)
 {
     (void) (dim);
     struct gsl_NgIntegral_params *p = (struct gsl_NgIntegral_params*) params;
-    double HQenergy = p->HQenergy;
-    double temp = p->temp;
-    double time = p->time;
-
     double x = args[0];
     double y = args[1];
 
-    double result = p->ptr->dNg_over_dxdydt(time, temp, HQenergy, x, y);
+    double result = p->ptr->dNg_over_dxdydt(p->time, p->temp, p->HQenergy, x, y, p->maxdNgdxdydt);
     return result;
 }
 
-double RadiationHT::calculate(double time, double temp, double HQenergy)
+void RadiationHT::calculate(double time, double temp, double HQenergy, double& result, double &maxdNg)
 {
-    maxdNgdxdydt = 0.;
-    std::cout << "maxdNgdxdydt before : " << maxdNgdxdydt << std::endl; 
     double xl[2] = {0,0};
     double xu[2] = {1,1};
 
@@ -204,9 +195,10 @@ double RadiationHT::calculate(double time, double temp, double HQenergy)
     ps.time = time;
     ps.temp = temp;
     ps.HQenergy = HQenergy;
+    ps.maxdNgdxdydt = 0; // initialize the maxdNg before each integration
     ps.ptr = this;
 
-    double res, err;
+    double res,err;
     const gsl_rng_type *T;
     gsl_rng* r;
     gsl_monte_function G;
@@ -235,22 +227,25 @@ double RadiationHT::calculate(double time, double temp, double HQenergy)
 
     gsl_rng_free(r);
 
-    std::cout << "maxdNgdxdydt after : " << time << " " << temp << " " << HQenergy<< " " <<maxdNgdxdydt << std::endl;
-    return res;
+    result = res;
+    maxdNg = ps.maxdNgdxdydt;
 }
+
 
 void RadiationHT::tabulate(size_t NEstart, size_t dNE)
 {
     double time, temp, energy;
+    double result, maxdNg;
     for (size_t i=0; i < Ntime_; ++i) {
       time = timeL_ + i*dtime_;
       for (size_t j=0; j<Ntemp_; ++j) {
         temp = tempL_ + j*dtemp_;
         for (size_t k=NEstart; k < (NEstart + dNE); ++ k) {
           energy = EL_ + k * dE_;
-          double result = calculate(time, temp, energy);
+          calculate(time, temp, energy, result, maxdNg);
           RadTab[i][j][k] = result;
-          Max_dNg[i][j][k] = maxdNgdxdydt;
+          Max_dNg[i][j][k] = maxdNg;
+//   std::cout << time << " " << temp << " " << energy << " " << result << " " << maxdNg<< std::endl;
       }
     }
   } 
@@ -295,8 +290,10 @@ int main()
     double temp=0.18;
     double HQenergy = 10;
 
-    double result = rad.calculate(time, temp, HQenergy);
-    rad.tabulate(0,1);
+    double result, maxdNg;
+    rad.calculate(time, temp, HQenergy, result, maxdNg);
+    std::cout << result << " " << maxdNg << std::endl;
+    //rad.tabulate(0,1);
     for (int i=1; i<=200; i++)
       for (int j=1; j<=200; j++)
       {

@@ -3,6 +3,8 @@
 
 #include <cmath>
 #include <iostream>
+#include <stdlib.h>
+
 
 // >>>>>>>>>>>> constants >>>>>>>>>>>>>>>>>>>
 const double cMass = 1.27;
@@ -12,8 +14,11 @@ const int Nc=3;
 const double CF = 4.0/3;
 const double ALPHA = 1.047;
 const double HBARC = 0.1973;
+const double inv_fm_to_GeV = 0.1973;
+
 const double fixAlphas = 0.3;
 
+const double eSMALL = 1e-16;
 
 
 const double TINIT = 0.0;
@@ -42,5 +47,12 @@ double interpolate3d(boost::multi_array<double, 3> *A, const int ni, const doubl
           result += (*A)[ni+i][nj+j][nk+k] * wi[i] * wj[j] * wk[k];
         }
     return result;
+}
+
+
+// >>>>>>>>>>>> random number generation
+double randUniform()
+{
+    return (double)rand()/RAND_MAX;
 }
 #endif

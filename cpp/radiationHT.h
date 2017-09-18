@@ -34,7 +34,12 @@ public:
     void calculate(double time, double temp, double HQenergy, double& result, double& maxdNg);//gluon emission prob, also the maximum integrand it encountered
     void tabulate(size_t NEstart, size_t dNE);
     double interpR(double time, double temp, double HQenergy); // interpolate emission prob
-
+    double interpMax(double time, double temp, double HQenergy); // interpolate max_dNg
+    double getNg(double time, double temp, double HQenergy, double qhat);
+    double get_MaxdNg(double time, double temp, double HQenegry);
+    double get_dNg(double time, double temp, double HQenergy, double x, double y);
+    bool emitGluon(double time, double temp, double HQenergy, double qhat, double deltat);
+    bool sampleGluon(double time, double temp, double HQenergy, double qhat, double deltat, std::vector<double> & gluon);
 };
 
 struct gsl_NgIntegral_params
